@@ -15,11 +15,22 @@ namespace Lutebot_4
 {
     public partial class MainForm : Form
     {
-        private MidiConverter converter = new MidiConverter();
+        private MidiConverter converter = new MidiConverter(Instrument.Prefabs.First());
 
         public MainForm()
         {
             InitializeComponent();
+            // Fill the instrumentComboBox
+            instrumentComboBox.DataSource = Instrument.Prefabs;
+            instrumentComboBox.DisplayMember = "Name";
+            instrumentComboBox.SelectedIndex = 0;
+
+            trackAlignmentPanel.Paint += TrackAlignmentPanel_Paint;
+        }
+
+        private void TrackAlignmentPanel_Paint(object sender, PaintEventArgs e)
+        {
+            converter.DrawTrackAlignmentImage(trackAlignmentPanel.Width, trackAlignmentPanel.Height, e.Graphics);
         }
 
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
@@ -55,21 +66,21 @@ namespace Lutebot_4
             // Setup the track and channel lists
             channelListBox.Items.Clear();
             int i = 0;
-            foreach(var kvp in converter.TrackNames)
+            foreach(var track in converter.MidiTracks)
             {
-                channelListBox.Items.Add(kvp);
-                channelListBox.SetItemChecked(i++, true);
+                channelListBox.Items.Add(track);
+                channelListBox.SetItemChecked(i++, track.Active);
             }
-            channelListBox.DisplayMember = "Value";
+            channelListBox.DisplayMember = "TrackName";
 
             i = 0;
             instrumentListBox.Items.Clear();
-            foreach (var kvp in converter.InstrumentNamesByChannel)
+            foreach (var channel in converter.MidiChannels)
             {
-                instrumentListBox.Items.Add(kvp);
-                instrumentListBox.SetItemChecked(i++, true);
+                instrumentListBox.Items.Add(channel);
+                instrumentListBox.SetItemChecked(i++, channel.Active);
             }
-            instrumentListBox.DisplayMember = "Value";
+            instrumentListBox.DisplayMember = "InstrumentName";
         }
     }
 }

@@ -34,8 +34,8 @@
             this.button2 = new System.Windows.Forms.Button();
             this.instrumentListBox = new System.Windows.Forms.CheckedListBox();
             this.label3 = new System.Windows.Forms.Label();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.comboBox1 = new System.Windows.Forms.ComboBox();
+            this.trackAlignmentPanel = new System.Windows.Forms.Panel();
+            this.instrumentComboBox = new System.Windows.Forms.ComboBox();
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.channelListBox = new System.Windows.Forms.CheckedListBox();
@@ -132,23 +132,23 @@
             this.label3.TabIndex = 5;
             this.label3.Text = "MIDI Instruments";
             // 
-            // panel1
+            // trackAlignmentPanel
             // 
-            this.panel1.Location = new System.Drawing.Point(28, 373);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(473, 174);
-            this.panel1.TabIndex = 6;
+            this.trackAlignmentPanel.Location = new System.Drawing.Point(28, 373);
+            this.trackAlignmentPanel.Name = "trackAlignmentPanel";
+            this.trackAlignmentPanel.Size = new System.Drawing.Size(473, 174);
+            this.trackAlignmentPanel.TabIndex = 6;
             // 
-            // comboBox1
+            // instrumentComboBox
             // 
-            this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Items.AddRange(new object[] {
+            this.instrumentComboBox.FormattingEnabled = true;
+            this.instrumentComboBox.Items.AddRange(new object[] {
             "Mordhau Lute (25 Notes)",
             "Mordhau Modded Lute (59 Notes)"});
-            this.comboBox1.Location = new System.Drawing.Point(161, 316);
-            this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(340, 24);
-            this.comboBox1.TabIndex = 7;
+            this.instrumentComboBox.Location = new System.Drawing.Point(161, 316);
+            this.instrumentComboBox.Name = "instrumentComboBox";
+            this.instrumentComboBox.Size = new System.Drawing.Size(340, 24);
+            this.instrumentComboBox.TabIndex = 7;
             // 
             // label4
             // 
@@ -302,9 +302,9 @@
             this.tabPage1.Controls.Add(this.instrumentListBox);
             this.tabPage1.Controls.Add(this.label3);
             this.tabPage1.Controls.Add(this.label6);
-            this.tabPage1.Controls.Add(this.panel1);
+            this.tabPage1.Controls.Add(this.trackAlignmentPanel);
             this.tabPage1.Controls.Add(this.label5);
-            this.tabPage1.Controls.Add(this.comboBox1);
+            this.tabPage1.Controls.Add(this.instrumentComboBox);
             this.tabPage1.Controls.Add(this.channelListBox);
             this.tabPage1.Controls.Add(this.label4);
             this.tabPage1.Location = new System.Drawing.Point(4, 25);
@@ -488,8 +488,8 @@
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.CheckedListBox instrumentListBox;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.ComboBox comboBox1;
+        private System.Windows.Forms.Panel trackAlignmentPanel;
+        private System.Windows.Forms.ComboBox instrumentComboBox;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.CheckedListBox channelListBox;
