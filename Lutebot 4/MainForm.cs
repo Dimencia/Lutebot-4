@@ -7,6 +7,7 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -26,7 +27,18 @@ namespace Lutebot_4
             instrumentComboBox.SelectedIndex = 0;
 
             trackAlignmentPanel.Paint += TrackAlignmentPanel_Paint;
+            trackAlignmentPanel.MouseMove += TrackAlignmentPanel_MouseMove;
+            trackAlignmentPanel.MouseEnter += TrackAlignmentPanel_MouseEnter;
+            trackAlignmentPanel.MouseLeave += TrackAlignmentPanel_MouseLeave;
+            this.DoubleBuffered = true;
+            typeof(Panel).InvokeMember("DoubleBuffered", BindingFlags.SetProperty
+            | BindingFlags.Instance | BindingFlags.NonPublic, null,
+            trackAlignmentPanel, new object[] { true });
         }
+
+        private void TrackAlignmentPanel_MouseLeave(object sender, EventArgs e) => converter.TrackAlignmentMouseOver = false;
+        private void TrackAlignmentPanel_MouseEnter(object sender, EventArgs e) => converter.TrackAlignmentMouseOver = true;
+        private void TrackAlignmentPanel_MouseMove(object sender, MouseEventArgs e) { converter.LastMouse = e.Location; trackAlignmentPanel.Refresh(); }
 
         private void TrackAlignmentPanel_Paint(object sender, PaintEventArgs e)
         {

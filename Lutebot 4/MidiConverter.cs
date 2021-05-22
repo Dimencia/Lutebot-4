@@ -105,6 +105,9 @@ namespace Lutebot_4
         }
 
 
+        // TODO: Find a better place/way to handle these
+        public bool TrackAlignmentMouseOver { get; set; }
+        public Point LastMouse { get; set; }
         
 
 
@@ -122,14 +125,20 @@ namespace Lutebot_4
             // Just like last time, we're going to draw the octaves horizontally - which is a bit awkward cuz that's normally time, but, we don't need time.
 
             // Alright, well, IDK.  Draw the selected instrument at the top
-            float noteWidth = 2;
-            float channelHeight = 25;
-            float yPadding = 3;
+            float noteWidth = 3;
+            float channelHeight = 7;
+            float yPadding = 1;
+            float bigChannelHeight = 25;
 
-            var selectedInstrumentRect = new RectangleF(width / 2f - noteWidth * (SelectedInstrument.NoteCount / 2f), 0, noteWidth * SelectedInstrument.NoteCount, channelHeight);
-            DrawSelectedInstrumentAlignmentGraphic(selectedInstrumentRect, graphics);
+            // Let's paint a background
+            graphics.FillRectangle(Brushes.GhostWhite, 0, 0, width, height);
 
-            float y = selectedInstrumentRect.Y + selectedInstrumentRect.Height + yPadding;
+            var selectedInstrumentRect = new RectangleF(width / 2f - noteWidth * (SelectedInstrument.NoteCount / 2f), 0, noteWidth * SelectedInstrument.NoteCount, bigChannelHeight);
+            DrawSelectedInstrumentAlignmentGraphic(selectedInstrumentRect, graphics, Brushes.DarkGreen);
+
+
+            // Skip the area where we'd draw a highlighted channel's info
+            float y = selectedInstrumentRect.Y + selectedInstrumentRect.Height + bigChannelHeight + 20;
             // Draw each Channel on this map
             if (MidiChannels != null)
                 foreach (var channel in MidiChannels)
@@ -137,52 +146,82 @@ namespace Lutebot_4
                     if (channel.HighestNote != null && channel.LowestNote != null)
                     {
                         var channelRect = new RectangleF(width / 2f - noteWidth * ((channel.HighestNote.Number - channel.LowestNote.Number) / 2f) + (channel.LowestNote.Number - SelectedInstrument.LowestNote)*noteWidth, y, noteWidth * (channel.HighestNote.Number - channel.LowestNote.Number), channelHeight);
-                        DrawAlignmentChannel(channel, channelRect, graphics);
+                        if (DrawAlignmentChannel(channel, channelRect, graphics))
+                        {
+                            // This was a mouseover, draw its name and info somewhere
+                            // At the bottom, in a box that is sized appropriately, in the center.
+                            // This will include the original range
+                            var infoRect = new RectangleF(channelRect.X, bigChannelHeight + 10, channelRect.Width, bigChannelHeight);
+                            DrawInfo(infoRect, graphics, channel);
+
+                            // Also on the left and right side of the bar, we should add the converted range
+                        }
                         y += channelHeight + yPadding;
                     }
                 }
 
-            // This kind of works.  But it exposes a lot of obvious problems.
-            // 1. Horizontal scrolling, can't really happen, and we don't have enough space.  The labels are already bigger than the boxes
-            // , and would already be going offscreen if they were in proper positions
-            // 2. It's ugly.  Both of these can be kinda solved by adding a small box for each label, like on LB3
-            // But really, I don't want them to draw rectangles for these... 
+
+            // We need to detect an auto-offset to apply to them all to try to center the song before we display it, if there isn't one.  This should help with it being offscreen
+            // So next up is probably loading the saved data in our tracks so I can tell if there is or isn't one
         }
 
-        private void DrawAlignmentChannel(MidiChannel channel, RectangleF rect, Graphics graphics)
+        // returns true/false on whether or not the mouse was in the rect... 
+        private bool DrawAlignmentChannel(MidiChannel channel, RectangleF rect, Graphics graphics)
         {
-            // Unlike previous LuteBot, I don't want the rectangles drawn for these
-            // I want the text near the bottom, and above it, just a horizontal line spanning the notes (and labels on either end of that line)
             var brush = new SolidBrush(channel.DrawColor);
-            //graphics.FillRectangle(brush, rect.X, rect.Y, rect.Width, rect.Height);
-            graphics.DrawLine(new Pen(brush), rect.X, rect.Y, rect.X + rect.Width, rect.Y);
-
-            var stringSize = graphics.MeasureString(channel.InstrumentName, SystemFonts.DefaultFont);
-            graphics.DrawString(channel.InstrumentName, SystemFonts.DefaultFont, brush, rect.X + rect.Width/2 - stringSize.Width/2, rect.Y + rect.Height - stringSize.Height);
-
-            // Draw its highest and lowest notes
-            var smallerFont = new Font(FontFamily.GenericSansSerif, 7);
-            stringSize = graphics.MeasureString(channel.LowestNote.Name, smallerFont);
-            
-            graphics.DrawString(channel.LowestNote.Name, smallerFont, brush, rect.X - stringSize.Width - 3, rect.Y);
-            graphics.DrawString(channel.HighestNote.Name, smallerFont, brush, rect.X + rect.Width + 3, rect.Y);
+            graphics.FillRectangle(brush, rect);
+            // Draw a very thin bar, we will show them what it is on mouseover, no text unless they are moused over...
+            if (!TrackAlignmentMouseOver || !rect.Contains(LastMouse))
+                return false;
+            graphics.DrawRectangle(new Pen(new SolidBrush(Color.LightGreen)), rect.X, rect.Y, rect.Width, rect.Height);
+            return true;
         }
-        private void DrawSelectedInstrumentAlignmentGraphic(RectangleF selectedInstrumentRect, Graphics graphics)
+
+        private void DrawSelectedInstrumentAlignmentGraphic(RectangleF rect, Graphics graphics, Brush brush)
         {
-            graphics.FillRectangle(Brushes.DarkGreen, selectedInstrumentRect.X, selectedInstrumentRect.Y, selectedInstrumentRect.Width, selectedInstrumentRect.Height);
+            var blackPen = new Pen(brush);
+            // Draw a line at the bottom
+            graphics.DrawLine(blackPen, rect.X, rect.Y + rect.Height - 3, rect.X + rect.Width, rect.Y + rect.Height - 3);
+            // Draw some vertical lines on each edge
+            graphics.DrawLine(blackPen, rect.X, rect.Y + rect.Height - 3, rect.X, rect.Y + rect.Height + 3);
+            graphics.DrawLine(blackPen, rect.X + rect.Width, rect.Y + rect.Height - 3, rect.X + rect.Width, rect.Y + rect.Height + 3);
 
             var stringSize = graphics.MeasureString(SelectedInstrument.Name, SystemFonts.DefaultFont);
 
-            graphics.DrawString(SelectedInstrument.Name, SystemFonts.DefaultFont, Brushes.White, selectedInstrumentRect.X + selectedInstrumentRect.Width / 2 - stringSize.Width / 2,
-                selectedInstrumentRect.Y + selectedInstrumentRect.Height / 2 - stringSize.Height / 2);
+            graphics.DrawString(SelectedInstrument.Name, SystemFonts.DefaultFont, brush, rect.X + rect.Width / 2 - stringSize.Width / 2,
+                rect.Y);
 
-            // Draw its highest and lowest notes
+            // Draw its highest and lowest notes at the bottom
             var smallerFont = new Font(FontFamily.GenericSansSerif, 7);
             string lowestName = MidiNote.GetName(SelectedInstrument.LowestNote);
             stringSize = graphics.MeasureString(lowestName, smallerFont);
 
-            graphics.DrawString(lowestName, smallerFont, Brushes.DarkGreen, selectedInstrumentRect.X - stringSize.Width - 3, selectedInstrumentRect.Y);
-            graphics.DrawString(MidiNote.GetName(SelectedInstrument.LowestNote + SelectedInstrument.NoteCount), smallerFont, Brushes.DarkGreen, selectedInstrumentRect.X + selectedInstrumentRect.Width + 3, selectedInstrumentRect.Y);
+            graphics.DrawString(lowestName, smallerFont, brush, rect.X - stringSize.Width - 3, rect.Y + rect.Height - stringSize.Height);
+            graphics.DrawString(MidiNote.GetName(SelectedInstrument.LowestNote + SelectedInstrument.NoteCount), smallerFont, brush, rect.X + rect.Width + 3, rect.Y + rect.Height - stringSize.Height);
+        }
+
+        private void DrawInfo(RectangleF rect, Graphics graphics, MidiChannel channel)
+        {
+            var brush = new SolidBrush(channel.DrawColor);
+            var pen = new Pen(brush);
+            // Draw a line at the top
+            graphics.DrawLine(pen, rect.X, rect.Y, rect.X + rect.Width, rect.Y);
+            // Draw some vertical lines on each edge
+            graphics.DrawLine(pen, rect.X, rect.Y - 3, rect.X, rect.Y + 3);
+            graphics.DrawLine(pen, rect.X + rect.Width, rect.Y - 3, rect.X + rect.Width, rect.Y + 3);
+
+            var stringSize = graphics.MeasureString(channel.InstrumentName, SystemFonts.DefaultFont);
+
+            graphics.DrawString(channel.InstrumentName, SystemFonts.DefaultFont, brush, rect.X + rect.Width / 2 - stringSize.Width / 2,
+                rect.Y + rect.Height - stringSize.Height);
+
+            // Draw its highest and lowest notes at the top
+            var smallerFont = new Font(FontFamily.GenericSansSerif, 7);
+            string lowestName = channel.LowestNote.Name;
+            stringSize = graphics.MeasureString(lowestName, smallerFont);
+
+            graphics.DrawString(lowestName, smallerFont, brush, rect.X - stringSize.Width - 3, rect.Y);
+            graphics.DrawString(channel.HighestNote.Name, smallerFont, brush, rect.X + rect.Width + 3, rect.Y);
         }
     }
 
